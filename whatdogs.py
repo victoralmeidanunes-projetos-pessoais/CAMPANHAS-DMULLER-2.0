@@ -8,9 +8,41 @@ import shutil
 import subprocess
 import time
 import os
+from datetime import datetime
 
 import win32com.client as win32
 from PIL import ImageGrab
+
+
+
+# ======= CONFIGURAÇÃO GIT HUB =========
+
+
+PROJETO_DIR = r"B:\Victor\ACOMPANHAMENTOS\PROJETO"
+
+def enviar_git():
+    try:
+        subprocess.run("git add .", cwd=PROJETO_DIR, shell=True, check=True)
+
+        msg = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+        subprocess.run(
+            f'git commit -m "{msg}"',
+            cwd=PROJETO_DIR,
+            shell=True,
+            check=True
+        )
+
+        subprocess.run("git push", cwd=PROJETO_DIR, shell=True, check=True)
+
+        print("✔ Git atualizado com sucesso!")
+
+    except Exception as e:
+        print("❌ Erro no Git:", e)
+
+
+
+
 
 # ========= CONFIGURAÇÃO =========
 
@@ -142,8 +174,7 @@ ARQUIVOS = [ #KI-PIPOKA
     
 ]
 
-# CAMINHO DO .BAT
-BAT_GITHUB = r"C:\Users\victor.n\PROJETO\att.bat"
+
 
 # =====================================
 
@@ -332,12 +363,7 @@ class MonitorExcel(FileSystemEventHandler):
 
             print("\nExecutando atualização GitHub...")
 
-            # subprocess.run(
-            #     BAT_GITHUB,
-            #     shell=True
-            # )
-
-            
+            enviar_git()
 
             print("\nGitHub atualizado com sucesso.\n")
 
