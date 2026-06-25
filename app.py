@@ -9,9 +9,9 @@ import os
 
 from db_config import (
     validar_login,
-
-    criar_tabela,
-    
+    registrar_acesso,
+    conectar_supabase,
+    criar_tabela
 )
 
 from historico import (listar_atualizacoes,listar_ultimas_atualizacoes)
@@ -67,6 +67,12 @@ def tela_login():
             st.session_state.logado = True
             st.session_state.usuario = usuario[1]
             st.session_state.perfil = usuario[2]
+
+            supabase = conectar_supabase()
+            registrar_acesso(
+                supabase,
+                usuario[1]
+            )
 
             st.rerun()
 

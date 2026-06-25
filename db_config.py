@@ -132,21 +132,10 @@ def conectar_supabase():
         st.secrets["SUPABASE_KEY"]
     )
 
-if __name__ == "__main__":
+from datetime import datetime
 
-    supabase = conectar_supabase()
-
-    resultado = (
-        supabase
-        .table("acessos")
-        .select("*")
-        .limit(2)
-        .execute()
-    )
-
-    print(resultado.data)
-
-
-print("STATUS:", resultado)
-print("DATA:", resultado.data)
-print("ERROR:", resultado.error)
+def registrar_acesso(supabase, usuario):
+    supabase.table("acessos").insert({
+        "usuario": usuario,
+        "data_hora": datetime.now().isoformat()
+    }).execute()
