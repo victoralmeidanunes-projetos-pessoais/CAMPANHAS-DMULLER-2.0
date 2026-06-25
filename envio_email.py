@@ -5,7 +5,7 @@ from pathlib import Path
 
 import win32com.client as win32
 
-from db_config import BANCO
+from db_config import BANCO, registrar_log_envio_email
 
 EXCEL_EXTS = [".xlsx", ".xlsb", ".xlsm"]
 LOG_FILE = Path(__file__).resolve().parent / "envio_email.log"
@@ -72,12 +72,26 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
 
     if not destinatarios:
         _log_envio("no_destinatario", caminho_png)
+        registrar_log_envio_email(
+            arquivo_png=caminho_png,
+            arquivo_excel=None,
+            destinatario_email=None,
+            status="fornecedor_nao_encontrado",
+            observacao="Fornecedor não encontrado na tabela fornecedores"
+        )
         return False
 
     arquivo_excel = _encontrar_excel_para_png(caminho_png)
     if arquivo_excel is None:
         erro_texto = f"Não foi possível localizar o arquivo Excel com o mesmo nome de {caminho_png}."
         _log_envio("excel_nao_encontrado", caminho_png, destinatarios, erro=erro_texto)
+        registrar_log_envio_email(
+            arquivo_png=caminho_png,
+            arquivo_excel=None,
+            destinatario_email=destinatarios,
+            status="erro",
+            observacao=erro_texto
+        )
         raise FileNotFoundError(erro_texto)
 
     outlook = win32.Dispatch("Outlook.Application")
@@ -107,6 +121,25 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
         f"<p>Arquivo Excel anexado: {Path(arquivo_excel).name}</p>"
     )
 
-    mensagem.Send()
-    _log_envio("enviado", caminho_png, destinatarios, arquivo_excel)
-    return True
+    try:
+        mensagem.Send()
+        _log_envio("enviado", caminho_png, destinatarios, arquivo_excel)
+        registrar_log_envio_email(
+            arquivo_png=caminho_png,
+            arquivo_excel=arquivo_excel,
+            destinatario_email=destinatarios,
+            status="enviado",
+            observacao="Email enviado com sucesso"
+        )
+        return True
+    except Exception as e:
+        erro_texto = str(e)
+        _log_envio("erro_envio", caminho_png, destinatarios, arquivo_excel, erro=erro_texto)
+        registrar_log_envio_email(
+            arquivo_png=caminho_png,
+            arquivo_excel=arquivo_excel,
+            destinatario_email=destinatarios,
+            status="erro",
+            observacao=erro_texto
+        )
+        raise

@@ -66,6 +66,26 @@ def criar_tabela_fornecedores():
     conn.close()
 
 
+def criar_tabela_logs_envio_email():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS logs_envio_email (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data_hora TEXT NOT NULL,
+            arquivo_png TEXT NOT NULL,
+            arquivo_excel TEXT,
+            destinatario_email TEXT,
+            status TEXT NOT NULL,
+            observacao TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 # =========================================
 # USUÁRIOS
 # =========================================
@@ -136,6 +156,29 @@ def validar_login(login, senha):
 
     return usuario
 
+
+def registrar_log_envio_email(arquivo_png, arquivo_excel, destinatario_email, status, observacao=None):
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO logs_envio_email
+            (data_hora, arquivo_png, arquivo_excel, destinatario_email, status, observacao)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            arquivo_png,
+            arquivo_excel,
+            destinatario_email,
+            status,
+            observacao
+        )
+    )
+
+    conn.commit()
+    conn.close()
 
 
 import streamlit as st
