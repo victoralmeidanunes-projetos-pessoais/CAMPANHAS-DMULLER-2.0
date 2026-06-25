@@ -1,23 +1,9 @@
-﻿
-streamlit==1.32.0
-pandas
-openpyxl
+﻿streamlit==1.32.0
 Pillow
-pyxlsb
 streamlit-pdf-viewer
-python-multipart==0.0.28
-rpds-py==0.30.0
-six==1.17.0
-smmap==5.0.3
-tenacity==9.1.4
-toml==0.10.2
-typing_extensions==4.15.0
-tzdata==2026.2
-watchdog==6.0.0
-
 supabase
-urllib3<1.27
-websockets<16
+openpyxl
+pyxlsb
 
 
 
