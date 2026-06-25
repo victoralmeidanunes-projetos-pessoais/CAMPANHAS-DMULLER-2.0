@@ -126,6 +126,7 @@ def validar_login(login, senha):
 from supabase import create_client
 import streamlit as st
 
+@st.cache_resource
 def conectar_supabase():
     return create_client(
         st.secrets["SUPABASE_URL"],
@@ -139,3 +140,22 @@ def registrar_acesso(supabase, usuario):
         "usuario": usuario,
         "data_hora": datetime.now().isoformat()
     }).execute()
+
+
+@st.cache_data(ttl=120)
+def listar_acessos(data_inicio=None, data_fim=None):
+    supabase = conectar_supabase()
+    query = supabase.table("acessos").select("usuario, data_hora").order("data_hora", desc=True)
+
+    if data_inicio is not None:
+        query = query.gte("data_hora", data_inicio.isoformat())
+    if data_fim is not None:
+        query = query.lte("data_hora", data_fim.isoformat())
+
+    response = query.execute()
+
+    if hasattr(response, "error") and response.error:
+        raise Exception(response.error.message if hasattr(response.error, "message") else str(response.error))
+
+    return response.data or []
+

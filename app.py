@@ -6,15 +6,17 @@ import streamlit as st
 from PIL import Image
 from streamlit_pdf_viewer import pdf_viewer
 import os
+from datetime import datetime, timedelta
 
 from db_config import (
     validar_login,
     registrar_acesso,
     conectar_supabase,
-    criar_tabela
+    criar_tabela,
+    listar_acessos
 )
 
-from historico import (listar_atualizacoes,listar_ultimas_atualizacoes)
+from historico import (listar_atualizacoes,listar_ultimas_atualizacoes, listar_atualizacoes_periodo)
 
 # =========================================
 # BANCO
@@ -159,6 +161,18 @@ html, body, [class*="css"] {
 [data-testid="stSidebar"] h1 {
     color: white !important;
 }
+
+[data-testid="stSidebar"] .sidebar-user {
+    background: none !important;
+    color: white !important;
+    padding: 0;
+    margin: 0 0 8px 0;
+    font-size: 0.95rem;
+}
+
+[data-testid="stSidebar"] .sidebar-user span {
+    color: white !important;
+}
             
 
 
@@ -196,11 +210,15 @@ with st.sidebar:
     # USUÁRIO LOGADO
     # ==========================
 
-    st.success(
-    f"👤  {st.session_state.usuario}")
+    st.markdown(
+        f"<div class='sidebar-user'>👤  {st.session_state.usuario}</div>",
+        unsafe_allow_html=True
+    )
 
-    st.info(
-    f"🔑  {st.session_state.perfil}")
+    st.markdown(
+        f"<div class='sidebar-user'>🔑  {st.session_state.perfil}</div>",
+        unsafe_allow_html=True
+    )
 
 
 
@@ -364,9 +382,10 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
 
 else:
 
-    tab1, tab2 = st.tabs([
+    tab1, tab2,tab4 = st.tabs([
         "📄 MECÂNICAS",
-        "📊 ACOMPANHAMENTOS"
+        "📊 ACOMPANHAMENTOS",
+        "🕛 ATUALIZAÇÕES"
     ])
 
 contador = 0
@@ -588,60 +607,182 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
 
     with tab3:
 
-        st.title("🔐 PÁGINA EM DESENVOLVIMENTO")
+        st.title("🔐 Acessos")
 
-        
+        tipo_visualizacao_acessos = st.radio(
+            "Visualização",
+            [
+                "ACESSOS NO MÊS",
+                "OUTRAS DATAS"
+            ],
+            horizontal=True
+        )
+
+        try:
+            if tipo_visualizacao_acessos == "ACESSOS NO MÊS":
+                inicio_mes = datetime(datetime.now().year, datetime.now().month, 1)
+                fim_mes = datetime.now()
+
+                with st.spinner("Calculando acessos do mês..."):
+                    acessos = listar_acessos(
+                        data_inicio=inicio_mes,
+                        data_fim=fim_mes
+                    )
+
+                    if acessos:
+                        for registro in acessos:
+                            if "data_hora" in registro and isinstance(registro["data_hora"], str):
+                                try:
+                                    registro["data_hora"] = datetime.fromisoformat(registro["data_hora"]).strftime("%d/%m/%Y %H:%M")
+                                except ValueError:
+                                    pass
+
+                        st.dataframe(
+                            acessos,
+                            use_container_width=True
+                        )
+                    else:
+                        st.info("Nenhum acesso encontrado no período.")
+
+            else:
+                coluna_inicio, coluna_fim = st.columns(2)
+                data_inicio = coluna_inicio.date_input(
+                    "Data inicial",
+                    datetime.now().date() - timedelta(days=30),
+                    key="acessos_data_inicio"
+                )
+                data_final = coluna_fim.date_input(
+                    "Data final",
+                    datetime.now().date(),
+                    key="acessos_data_final"
+                )
+
+                if data_inicio > data_final:
+                    st.error("Data inicial não pode ser maior que a data final.")
+                    acessos = []
+                else:
+                    inicio = datetime.combine(data_inicio, datetime.min.time())
+                    fim = datetime.combine(data_final, datetime.max.time())
+
+                    with st.spinner("Calculando acessos entre as datas..."):
+                        acessos = listar_acessos(
+                            data_inicio=inicio,
+                            data_fim=fim
+                        )
+
+                        if acessos:
+                            for registro in acessos:
+                                if "data_hora" in registro and isinstance(registro["data_hora"], str):
+                                    try:
+                                        registro["data_hora"] = datetime.fromisoformat(registro["data_hora"]).strftime("%d/%m/%Y %H:%M")
+                                    except ValueError:
+                                        pass
+
+                            st.dataframe(
+                                acessos,
+                                use_container_width=True
+                            )
+                        else:
+                            st.info("Nenhum acesso encontrado no período.")
+
+        except Exception as e:
+            st.error(f"Não foi possível carregar os acessos: {e}")
+
 
 # =========================================
 # TAB HISTÓRICO DE ATT
 # =========================================
 
 
-if st.session_state.perfil == "ADMINISTRADOR MASTER":
+with tab4:
 
-    with tab4:
+    st.title("🕛 Histórico de Atualizações")
 
-        st.title("🕛 Histórico de Atualizações")
+    tipo_visualizacao = st.radio(
+        "Visualização",
+        [
+            "Ver últimas",
+            "Ver mais"
+        ],
+        horizontal=True
+    )
 
-        tipo_visualizacao = st.radio(
-            "Visualização",
-            [
-                "Ver últimas",
-                "Ver todas"
-            ],
-            horizontal=True
-        )
+    dados = []
 
-        if tipo_visualizacao == "Ver últimas":
-
+    if tipo_visualizacao == "Ver últimas":
+        with st.spinner("Calculando histórico de atualizações..."):
             atualizacoes = listar_ultimas_atualizacoes()
 
-        else:
-
-            atualizacoes = listar_atualizacoes()
-
         if atualizacoes:
-
-            dados = []
-
             for arquivo, data_hora in atualizacoes:
-
                 dados.append({
                     "Arquivo": arquivo,
                     "Data/Hora": data_hora
                 })
 
-            st.dataframe(
-                dados,
-                use_container_width=True,
-                hide_index=True
-            )
+    else:
+        tipo_periodo_atualizacao = st.radio(
+            "Filtrar por período",
+            [
+                "ATUALIZAÇÕES NO MÊS",
+                "OUTRAS DATAS"
+            ],
+            horizontal=True
+        )
+
+        if tipo_periodo_atualizacao == "ATUALIZAÇÕES NO MÊS":
+            inicio_mes = datetime(datetime.now().year, datetime.now().month, 1)
+            fim_mes = datetime.now()
+
+            with st.spinner("Calculando histórico de atualizações do mês..."):
+                atualizacoes = listar_atualizacoes_periodo(
+                    inicio_mes,
+                    fim_mes
+                )
 
         else:
-
-            st.info(
-                "Nenhuma atualização registrada."
+            coluna_inicio, coluna_fim = st.columns(2)
+            data_inicio = coluna_inicio.date_input(
+                "Data inicial",
+                datetime.now().date() - timedelta(days=30),
+                key="atualizacoes_data_inicio"
             )
+            data_final = coluna_fim.date_input(
+                "Data final",
+                datetime.now().date(),
+                key="atualizacoes_data_final"
+            )
+
+            if data_inicio > data_final:
+                st.error("Data inicial não pode ser maior que a data final.")
+                atualizacoes = []
+            else:
+                inicio = datetime.combine(data_inicio, datetime.min.time())
+                fim = datetime.combine(data_final, datetime.max.time())
+
+                with st.spinner("Calculando histórico de atualizações entre as datas..."):
+                    atualizacoes = listar_atualizacoes_periodo(
+                        inicio,
+                        fim
+                    )
+
+    if atualizacoes:
+        for arquivo, data_hora in atualizacoes:
+            dados.append({
+                "Arquivo": arquivo,
+                "Data/Hora": data_hora
+            })
+
+    if dados:
+        st.dataframe(
+            dados,
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.info(
+        "Nenhuma atualização registrada."
+        )
 # =========================================
 # FOOTER
 # =========================================

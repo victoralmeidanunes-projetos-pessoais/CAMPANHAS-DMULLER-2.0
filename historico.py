@@ -1,6 +1,7 @@
 import sqlite3
 import os
 from datetime import datetime
+import streamlit as st
 
 BASE_DIR = os.path.dirname(
     os.path.abspath(__file__)
@@ -29,6 +30,10 @@ def criar_tabela():
 
         )
     """)
+
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_historico_data_hora ON historico_atualizacoes(data_hora)"
+    )
 
     conn.commit()
     conn.close()
@@ -81,6 +86,31 @@ def listar_atualizacoes():
     conn.close()
 
     return dados
+
+def listar_atualizacoes_periodo(data_inicio, data_fim):
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            arquivo,
+            data_hora
+        FROM historico_atualizacoes
+        WHERE data_hora BETWEEN ? AND ?
+        ORDER BY data_hora DESC
+    """,
+    (
+        data_inicio.strftime("%Y-%m-%d %H:%M:%S"),
+        data_fim.strftime("%Y-%m-%d %H:%M:%S")
+    ))
+
+    dados = cursor.fetchall()
+
+    conn.close()
+
+    return dados
+
 
 def listar_ultimas_atualizacoes():
 
