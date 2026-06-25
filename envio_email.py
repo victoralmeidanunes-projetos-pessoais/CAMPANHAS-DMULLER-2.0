@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 
 import win32com.client as win32
@@ -7,10 +8,23 @@ import win32com.client as win32
 from db_config import BANCO
 
 EXCEL_EXTS = [".xlsx", ".xlsb", ".xlsm"]
+LOG_FILE = Path(__file__).resolve().parent / "envio_email.log"
 
 
 def _normalizar_texto(texto: str) -> str:
     return texto.strip().lower()
+
+
+def _log_envio(status: str, caminho_png: str, destinatarios: str | None = None, arquivo_excel: str | None = None, erro: str | None = None) -> None:
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    linha = (
+        f"[{timestamp}] status={status} png={caminho_png} "
+        f"destinatarios={destinatarios or 'N/A'} "
+        f"excel={arquivo_excel or 'N/A'} "
+        f"erro={erro or 'N/A'}\n"
+    )
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(linha)
 
 
 def _buscar_destinatarios(fornecedor: str):
@@ -57,13 +71,14 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     destinatarios = _buscar_destinatarios(fornecedor)
 
     if not destinatarios:
+        _log_envio("no_destinatario", caminho_png)
         return False
 
     arquivo_excel = _encontrar_excel_para_png(caminho_png)
     if arquivo_excel is None:
-        raise FileNotFoundError(
-            f"Não foi possível localizar o arquivo Excel com o mesmo nome de {caminho_png}."
-        )
+        erro_texto = f"Não foi possível localizar o arquivo Excel com o mesmo nome de {caminho_png}."
+        _log_envio("excel_nao_encontrado", caminho_png, destinatarios, erro=erro_texto)
+        raise FileNotFoundError(erro_texto)
 
     outlook = win32.Dispatch("Outlook.Application")
     mensagem = outlook.CreateItem(0)
@@ -93,4 +108,5 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     )
 
     mensagem.Send()
+    _log_envio("enviado", caminho_png, destinatarios, arquivo_excel)
     return True
