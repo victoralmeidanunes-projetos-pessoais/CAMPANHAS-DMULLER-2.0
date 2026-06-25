@@ -123,3 +123,30 @@ def validar_login(login, senha):
 
 
 
+from supabase import create_client
+import streamlit as st
+
+def conectar_supabase():
+    return create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_KEY"]
+    )
+
+if __name__ == "__main__":
+
+    supabase = conectar_supabase()
+
+    resultado = (
+        supabase
+        .table("acessos")
+        .select("*")
+        .limit(2)
+        .execute()
+    )
+
+    print(resultado.data)
+
+
+print("STATUS:", resultado)
+print("DATA:", resultado.data)
+print("ERROR:", resultado.error)

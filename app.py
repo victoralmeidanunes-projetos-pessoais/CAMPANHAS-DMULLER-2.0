@@ -110,11 +110,24 @@ EXT_EXCEL = [".xlsx", ".xlsb", ".xlsm"]
 
 st.markdown("""
 <style>
+            
+[data-testid="stSidebar"] div[data-testid="stAlert"][kind="success"] {
+    background-color: #003366 !important;
+    color: #00ffcc !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stSidebar"] div[data-testid="stAlert"][kind="info"] {
+    background-color: #002244 !important;
+    color: #ffd000 !important;
+    border-radius: 10px !important;
+}
 
 html, body, [class*="css"] {
     background-color: #f5f5f5;
     color: #131203;
 }
+            
 
 .block-container {
     padding: 1rem 2rem;
@@ -140,6 +153,8 @@ html, body, [class*="css"] {
 [data-testid="stSidebar"] h1 {
     color: white !important;
 }
+            
+
 
 </style>
 """, unsafe_allow_html=True)
