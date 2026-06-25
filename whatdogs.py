@@ -410,6 +410,23 @@ class MonitorExcel(FileSystemEventHandler):
 
         self.processar(caminho)
 
+    def on_created(self, event):
+        if event.is_directory:
+            return
+
+        caminho = os.path.abspath(event.src_path)
+
+        if caminho.lower().endswith(".png"):
+            try:
+                enviado = enviar_email_fornecedor_por_png(caminho)
+                if enviado:
+                    print(f"Email enviado para fornecedor da pasta: {os.path.basename(os.path.dirname(caminho))}")
+                else:
+                    print("Fornecedor não encontrado na tabela fornecedores. Nenhum email enviado.")
+            except Exception as e:
+                print(f"Erro ao enviar email: {e}")
+            return
+
 # =====================================
 # INICIAR MONITORAMENTO
 # =====================================
@@ -418,16 +435,18 @@ observer = Observer()
 
 evento = MonitorExcel()
 
-pastas_monitoradas = set(
-
-    os.path.dirname(
-        os.path.abspath(a["origem"])
+pastas_monitoradas = set()
+for a in ARQUIVOS:
+    pastas_monitoradas.add(
+        os.path.dirname(os.path.abspath(a["origem"]))
+    )
+    pastas_monitoradas.add(
+        os.path.dirname(os.path.abspath(a["destino"]))
     )
 
-    for a in ARQUIVOS
-)
-
-for pasta in pastas_monitoradas:
+for pasta in sorted(pastas_monitoradas):
+    if not os.path.exists(pasta):
+        os.makedirs(pasta, exist_ok=True)
 
     print(f"Monitorando pasta:\n{pasta}\n")
 
