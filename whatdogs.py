@@ -229,16 +229,17 @@ def gerar_preview_excel(caminho_excel):
 
         imagem = ImageGrab.grabclipboard()
 
+        caminho_preview = None
         if imagem:
 
-            caminho_png = os.path.splitext(
+            caminho_preview = os.path.splitext(
                 caminho_excel
-            )[0] + "_preview.png"
+            )[0] + ".png"
 
-            imagem.save(caminho_png)
+            imagem.save(caminho_preview)
 
             print("\nPreview gerado:")
-            print(caminho_png)
+            print(caminho_preview)
 
         else:
 
@@ -247,6 +248,8 @@ def gerar_preview_excel(caminho_excel):
         wb.Close(False)
 
         excel.Quit()
+
+        return caminho_preview
 
     except Exception as e:
 
@@ -388,19 +391,10 @@ class MonitorExcel(FileSystemEventHandler):
 
         caminho = os.path.abspath(event.src_path)
 
-        # ACEITA PNG
+        # IGNORA eventos de PNG gerados pelo preview
         if caminho.lower().endswith(".png"):
-            try:
-                enviado = enviar_email_fornecedor_por_png(caminho)
-                if enviado:
-                    print(f"Email enviado para fornecedor da pasta: {os.path.basename(os.path.dirname(caminho))}")
-                else:
-                    print("Fornecedor não encontrado na tabela fornecedores. Nenhum email enviado.")
-            except Exception as e:
-                print(f"Erro ao enviar email: {e}")
             return
 
-        # ACEITA EXCEL
         if not caminho.lower().endswith((
             ".xlsx",
             ".xlsb",
