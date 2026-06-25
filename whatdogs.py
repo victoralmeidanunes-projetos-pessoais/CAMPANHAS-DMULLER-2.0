@@ -10,6 +10,7 @@ import time
 import os
 from datetime import datetime
 
+from envio_email import enviar_email_fornecedor_por_png
 import win32com.client as win32
 from PIL import ImageGrab
 
@@ -385,10 +386,22 @@ class MonitorExcel(FileSystemEventHandler):
         if event.is_directory:
             return
 
-        caminho = event.src_path.lower()
+        caminho = os.path.abspath(event.src_path)
+
+        # ACEITA PNG
+        if caminho.lower().endswith(".png"):
+            try:
+                enviado = enviar_email_fornecedor_por_png(caminho)
+                if enviado:
+                    print(f"Email enviado para fornecedor da pasta: {os.path.basename(os.path.dirname(caminho))}")
+                else:
+                    print("Fornecedor não encontrado na tabela fornecedores. Nenhum email enviado.")
+            except Exception as e:
+                print(f"Erro ao enviar email: {e}")
+            return
 
         # ACEITA EXCEL
-        if not caminho.endswith((
+        if not caminho.lower().endswith((
             ".xlsx",
             ".xlsb",
             ".xlsm"

@@ -50,6 +50,21 @@ def criar_tabela():
     conn.close()
 
 
+def criar_tabela_fornecedores():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS fornecedores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fornecedor TEXT NOT NULL,
+            email_destinatario TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
 
 # =========================================
 # USUÁRIOS

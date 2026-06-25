@@ -1,16 +1,8 @@
 from db_config import (
-    criar_tabela,
-    criar_tabela_historico,
-    criar_usuario
+
+    criar_tabela_fornecedores,
 )
 
-criar_tabela()
-criar_tabela_historico()
-
-criar_usuario(
-    "COMERCIAL",
-    "DM.26",
-    "ADMINISTRADOR"
-)
+criar_tabela_fornecedores()
 
 print("Banco configurado corretamente.")
