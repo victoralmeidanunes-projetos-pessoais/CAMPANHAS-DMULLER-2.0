@@ -123,11 +123,17 @@ def validar_login(login, senha):
 
 
 
-from supabase import create_client
 import streamlit as st
 
 @st.cache_resource
 def conectar_supabase():
+    try:
+        from supabase import create_client
+    except ImportError as exc:
+        raise ImportError(
+            "The supabase package is missing. Add 'supabase' to requirements.txt and redeploy."
+        ) from exc
+
     return create_client(
         st.secrets["SUPABASE_URL"],
         st.secrets["SUPABASE_KEY"]
