@@ -3,12 +3,26 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-import win32com.client as win32
+import smtplib
+import mimetypes
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.application import MIMEApplication
+from email.utils import make_msgid
+
 
 from db_config import BANCO, registrar_log_envio_email
 
 EXCEL_EXTS = [".xlsx", ".xlsb", ".xlsm"]
 LOG_FILE = Path(__file__).resolve().parent / "envio_email.log"
+
+# CONFIGURAÇÃO SMTP
+REMETENTE = "comercial.sc2@dmuller.com.br"
+SENHA = "Dmuller.365"
+SMTP_SERVER = "smtp.office365.com"
+SMTP_PORTA = 587
 
 
 def _normalizar_texto(texto: str) -> str:
@@ -93,45 +107,108 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
             observacao=erro_texto
         )
         raise FileNotFoundError(erro_texto)
+    
+    msg = MIMEMultipart("related")
 
-    outlook = win32.Dispatch("Outlook.Application")
-    mensagem = outlook.CreateItem(0)
+    msg["From"] = REMETENTE
+    msg["To"] = destinatarios
+    msg["Subject"] = f"Atualização: {Path(caminho_png).name}"
 
-    mensagem.To = destinatarios
-    mensagem.Subject = f"Atualização: {Path(caminho_png).name}"
-    mensagem.BodyFormat = 2
+    cid_img = make_msgid()[1:-1]
 
-    # Anexa o Excel e o PNG
-    mensagem.Attachments.Add(arquivo_excel)
-    anexos = mensagem.Attachments
-    anexo_png = anexos.Add(caminho_png)
+    html = f"""
+    <html>
+    <body>
 
-    try:
-        property_accessor = anexo_png.PropertyAccessor
-        property_accessor.SetProperty(
-            "http://schemas.microsoft.com/mapi/proptag/0x3712001F",
-            "updatedpng"
+    <p>O arquivo atualizado está abaixo:</p>
+
+    <p>
+    <img src="cid:{cid_img}" width="1000">
+    </p>
+
+    <p>
+    Arquivo Excel anexado:
+    <b>{Path(arquivo_excel).name}</b>
+    </p>
+
+    </body>
+    </html>
+    """
+
+    alternativo = MIMEMultipart("alternative")
+
+    alternativo.attach(
+        MIMEText(
+            "Segue atualização da campanha.",
+            "plain"
         )
-    except Exception:
-        pass
-
-    mensagem.HTMLBody = (
-        "<p>O arquivo PNG atualizado está abaixo:</p>"
-        f"<p><img src=\"cid:updatedpng\" alt=\"Imagem atualizada\"></p>"
-        f"<p>Arquivo Excel anexado: {Path(arquivo_excel).name}</p>"
     )
 
-    try:
-        mensagem.Send()
-        _log_envio("enviado", caminho_png, destinatarios, arquivo_excel)
-        registrar_log_envio_email(
-            arquivo_png=caminho_png,
-            arquivo_excel=arquivo_excel,
-            destinatario_email=destinatarios,
-            status="enviado",
-            observacao="Email enviado com sucesso"
+    alternativo.attach(
+        MIMEText(
+            html,
+            "html"
         )
-        return True
+    )
+
+    msg.attach(alternativo)
+
+    # PNG embutido
+
+    with open(caminho_png, "rb") as f:
+
+        imagem = MIMEImage(f.read())
+
+        imagem.add_header(
+            "Content-ID",
+            f"<{cid_img}>"
+        )
+
+        imagem.add_header(
+            "Content-Disposition",
+            "inline",
+            filename=os.path.basename(caminho_png)
+        )
+
+        msg.attach(imagem)
+
+    # Excel anexado
+
+    with open(arquivo_excel, "rb") as f:
+
+        anexo = MIMEApplication(f.read())
+
+        anexo.add_header(
+            "Content-Disposition",
+            "attachment",
+            filename=os.path.basename(
+                arquivo_excel
+            )
+        )
+
+        msg.attach(anexo)
+
+    
+
+    try:
+
+        print("Preparando envio SMTP...")
+
+        with smtplib.SMTP(
+            SMTP_SERVER,
+            SMTP_PORTA
+        ) as smtp:
+
+            smtp.starttls()
+
+            smtp.login(
+                REMETENTE,
+                SENHA
+            )
+
+            smtp.send_message(msg)
+
+        print("Email enviado com sucesso!")
     except Exception as e:
         erro_texto = str(e)
         _log_envio("erro_envio", caminho_png, destinatarios, arquivo_excel, erro=erro_texto)
