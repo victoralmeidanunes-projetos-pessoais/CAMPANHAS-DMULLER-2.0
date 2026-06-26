@@ -49,19 +49,132 @@ def enviar_git():
 # ARQUIVOS
 # =====================================
 
-ARQUIVOS = [
+ARQUIVOS = [ #KI-PIPOKA
     {
         "origem": r"B:\Victor\PAUTA D\FORNECEDORES PAUTA D\MARCAS PRÓPRIAS\ABERTAS\KIPIPOKA\INCENTIVO KI-PIPOKA JUNINA.xlsx",
-        "destino": r"B:\Victor\ACOMPANHAMENTOS\PROJETO\MECÂNICAS\PAUTA D\KIPIPOKA\INCENTIVO KI-PIPOKA JUNINA.xlsx"
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\KIPIPOKA\INCENTIVO KI-PIPOKA JUNINA.xlsx"
     },
+
+    #BITES
     {
         "origem": r"B:\Victor\PAUTA D\FORNECEDORES PAUTA D\MARCAS PRÓPRIAS\ABERTAS\BITES\INCENTIVO BITES - LANÇAMENTOS.xlsx",
-        "destino": r"B:\Victor\ACOMPANHAMENTOS\PROJETO\MECÂNICAS\PAUTA D\BITES\INCENTIVO BITES - LANÇAMENTOS.xlsx"
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\BITES\INCENTIVO BITES - LANÇAMENTOS.xlsx"
     },
+
+    #CORY
+
     {
         "origem": r"B:\Anne\7º Acompanhamentos\Cory\CAMPANHA DE INCENTIVO CORY - TRIMESTRAL.xlsx",
-        "destino": r"B:\Victor\ACOMPANHAMENTOS\PROJETO\MECÂNICAS\PAUTA M\CORY\CAMPANHA DE INCENTIVO CORY - TRIMESTRAL.xlsx"
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA M\CORY\CAMPANHA DE INCENTIVO CORY - TRIMESTRAL.xlsx"
     },
+
+    #SH
+    
+    {
+        "origem": r"B:\Victor\PAUTA M\SANTA HELENA\CAMPANHA SH\CAMPANHA INCENTIVO SH - JUNINA 2026.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA M\SANTA HELENA\CAMPANHA INCENTIVO SH - JUNINA 2026.xlsx"
+    },
+
+    #SH - VESTINDO A CAMISA
+    
+    {
+        "origem": r"B:\Victor\PAUTA M\SANTA HELENA\CAMPANHA SH\INCENTIVO SANTA HELENA - VESTINDO A CAMISA..xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA M\SANTA HELENA\INCENTIVO SANTA HELENA - VESTINDO A CAMISA..xlsx"
+    },
+
+    #YPÊ
+    
+    {
+        "origem": r"B:\Victor\PAUTA M\YPÊ\ABERTAS\Campanha de Incentivo Ypê - Categorias Foco 05'06.xlsb",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA M\YPÊ\Campanha de Incentivo Ypê - Categorias Foco 05'06.xlsb"
+    },
+
+    #FERRERO
+    
+    #EQUIPE FERRERO
+    {
+        "origem": r"B:\Victor\PAUTA D\Ferrero\FERRERO\1. ACOMPANHAMENTOS & CAMPANHAS\2026\Ano Fiscal 25'26\CAMPANHAS\3ª SESSIONE\Campanha de incentivo - Equipe Ferrero  25'26.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\FERRERO\INCENTIVO EQUIPE FERRERO - SS 3'2026.xlsx"
+    },
+
+    #MAESTROS
+    {
+        "origem": r"B:\Victor\PAUTA D\Ferrero\FERRERO\1. ACOMPANHAMENTOS & CAMPANHAS\2026\Ano Fiscal 25'26\PROJETO MAESTROS\ACOMPANHAMENTOS - MAESTROS FERRERO 25'26.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\FERRERO\ACOMPANHAMENTOS - MAESTROS FERRERO 25'26.xlsx"
+    },
+
+    #JOHNSON
+    
+    #TOP CONTAS
+    {
+        "origem": r"B:\Nicolas\Acompanhamentos\JOHNSON\2025.26\Q4\Campanha Johnson - Top Contas Q4 FY26.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\JOHNSON\Campanha Johnson - Top Contas Q4 FY26.xlsx"
+    },
+
+
+
+    #LOJA PERFEITA
+
+    {
+        "origem": r"B:\Nicolas\Acompanhamentos\JOHNSON\2025.26\Q4\Campanha Johnson - Loja Perfeita 360 Q4 FY26.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\JOHNSON\Campanha Johnson - Loja Perfeita 360 Q4 FY26.xlsx"
+    },
+
+    #PLANO DE NEGÓCIOS / LIDERANÇA
+
+    {
+        "origem": r"B:\Nicolas\Acompanhamentos\JOHNSON\2025.26\Q4\Acompanhamento Johnson - Plano de Negócios Q4 FY26.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\JOHNSON\INCENTIVO LIDERANÇA - PLANO DE NEGÓCIOS JOHNSON.xlsx"
+    },
+
+    #EXPANDINDO
+
+    {
+        "origem": r"B:\Nicolas\Acompanhamentos\JOHNSON\2025.26\Q4\Acompanhamento Johnson - Expandindo Q4 FY26.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\JOHNSON\Acompanhamento Johnson - Expandindo Q4 FY26.xlsx"
+    },
+
+
+    #NUTRY
+
+    {
+        "origem": r"B:\Victor\PAUTA M\NUTRY\INCENTIVO NUTRY - JUNHO & JULHO.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA M\NUTRY\INCENTIVO NUTRY - JUNHO & JULHO.xlsx"
+    },
+
+#RAYOVAC
+
+    {
+        "origem": r"B:\Victor\PAUTA D\FORNECEDORES PAUTA D\Rayovac\CAMPANHAS\VIGENTES\RAYOVAC & ENERGIZER - RANKING JUNHO.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\RAYOVAC\RAYOVAC & ENERGIZER - RANKING JUNHO.xlsx"
+    },
+
+
+#ENERGIZER
+
+    {
+        "origem": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA D\RAYOVAC\RAYOVAC & ENERGIZER - RANKING JUNHO.xlsx",
+
+        "destino": r"C:\Users\victor.n\PROJETO\MECÂNICAS\PAUTA M\ENERGIZER\ENERGIZER & RAYOVAC- RANKING JUNHO.xlsx"
+    }
+
+
+
+
+    
 ]
 
 
