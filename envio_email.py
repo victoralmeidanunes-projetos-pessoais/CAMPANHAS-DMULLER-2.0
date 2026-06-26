@@ -13,7 +13,7 @@ from email.mime.application import MIMEApplication
 from email.utils import make_msgid
 
 
-from db_config import BANCO, registrar_log_envio_email
+from db_config import BANCO, registrar_log_envio_email, garantir_coluna_xlsx_fornecedores
 
 EXCEL_EXTS = [".xlsx", ".xlsb", ".xlsm"]
 LOG_FILE = Path(__file__).resolve().parent / "envio_email.log"
@@ -42,21 +42,28 @@ def _log_envio(status: str, caminho_png: str, destinatarios: str | None = None, 
 
 
 def _buscar_destinatarios(fornecedor: str):
+    garantir_coluna_xlsx_fornecedores()
+
     fornecedor_normalizado = _normalizar_texto(fornecedor)
 
     conn = sqlite3.connect(BANCO)
     cursor = conn.cursor()
-    cursor.execute("SELECT fornecedor, email_destinatario FROM fornecedores")
+    cursor.execute("SELECT fornecedor, email_destinatario, XLSX FROM fornecedores")
     linhas = cursor.fetchall()
     conn.close()
 
-    for nome, emails in linhas:
+    for nome, emails, xlsx in linhas:
         if nome is None or emails is None:
             continue
         if _normalizar_texto(nome) == fornecedor_normalizado:
-            return emails
+            if xlsx is None:
+                return emails, 1
+            if isinstance(xlsx, str):
+                valor = xlsx.strip().lower()
+                return emails, 1 if valor in {"1", "true", "sim", "s", "yes"} else 0
+            return emails, 1 if int(xlsx) == 1 else 0
 
-    return None
+    return None, 1
 
 
 def _encontrar_excel_para_png(caminho_png: str) -> str | None:
@@ -82,7 +89,7 @@ def _encontrar_excel_para_png(caminho_png: str) -> str | None:
 def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     caminho_png = os.path.abspath(caminho_png)
     fornecedor = Path(caminho_png).parent.name
-    destinatarios = _buscar_destinatarios(fornecedor)
+    destinatarios, enviar_xlsx = _buscar_destinatarios(fornecedor)
 
     if not destinatarios:
         _log_envio("no_destinatario", caminho_png)
@@ -95,18 +102,20 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
         )
         return False
 
-    arquivo_excel = _encontrar_excel_para_png(caminho_png)
-    if arquivo_excel is None:
-        erro_texto = f"Não foi possível localizar o arquivo Excel com o mesmo nome de {caminho_png}."
-        _log_envio("excel_nao_encontrado", caminho_png, destinatarios, erro=erro_texto)
-        registrar_log_envio_email(
-            arquivo_png=caminho_png,
-            arquivo_excel=None,
-            destinatario_email=destinatarios,
-            status="erro",
-            observacao=erro_texto
-        )
-        raise FileNotFoundError(erro_texto)
+    arquivo_excel = None
+    if enviar_xlsx:
+        arquivo_excel = _encontrar_excel_para_png(caminho_png)
+        if arquivo_excel is None:
+            erro_texto = f"Não foi possível localizar o arquivo Excel com o mesmo nome de {caminho_png}."
+            _log_envio("excel_nao_encontrado", caminho_png, destinatarios, erro=erro_texto)
+            registrar_log_envio_email(
+                arquivo_png=caminho_png,
+                arquivo_excel=None,
+                destinatario_email=destinatarios,
+                status="erro",
+                observacao=erro_texto
+            )
+            raise FileNotFoundError(erro_texto)
     
     msg = MIMEMultipart("related")
 
@@ -126,10 +135,7 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     <img src="cid:{cid_img}" width="1000">
     </p>
 
-    <p>
-    Arquivo Excel anexado:
-    <b>{Path(arquivo_excel).name}</b>
-    </p>
+    {f'<p>Arquivo Excel anexado: <b>{Path(arquivo_excel).name}</b></p>' if enviar_xlsx and arquivo_excel else '<p>Este envio não inclui anexo em Excel.</p>'}
 
     </body>
     </html>
@@ -174,19 +180,20 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
 
     # Excel anexado
 
-    with open(arquivo_excel, "rb") as f:
+    if enviar_xlsx and arquivo_excel:
+        with open(arquivo_excel, "rb") as f:
 
-        anexo = MIMEApplication(f.read())
+            anexo = MIMEApplication(f.read())
 
-        anexo.add_header(
-            "Content-Disposition",
-            "attachment",
-            filename=os.path.basename(
-                arquivo_excel
+            anexo.add_header(
+                "Content-Disposition",
+                "attachment",
+                filename=os.path.basename(
+                    arquivo_excel
+                )
             )
-        )
 
-        msg.attach(anexo)
+            msg.attach(anexo)
 
     
 
