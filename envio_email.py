@@ -127,11 +127,15 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     fornecedor = Path(caminho_png).parent.name
     destinatarios, enviar_xlsx, enviar_png, enviar_pdf = _buscar_destinatarios(fornecedor)
 
+    nome_arquivo = Path(caminho_png).stem
+
     if not destinatarios:
         _log_envio("no_destinatario", caminho_png)
         registrar_log_envio_email(
-            arquivo_png=caminho_png,
-            arquivo_excel=None,
+            nome_arquivo=nome_arquivo,
+            arquivo_png=0,
+            arquivo_excel=0,
+            arquivo_pdf=0,
             destinatario_email=None,
             status="fornecedor_nao_encontrado",
             observacao="Fornecedor não encontrado na tabela fornecedores"
@@ -145,8 +149,10 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
             erro_texto = f"Não foi possível localizar o arquivo Excel com o mesmo nome de {caminho_png}."
             _log_envio("excel_nao_encontrado", caminho_png, destinatarios, erro=erro_texto)
             registrar_log_envio_email(
-                arquivo_png=caminho_png,
-                arquivo_excel=None,
+                nome_arquivo=nome_arquivo,
+                arquivo_png=0,
+                arquivo_excel=0,
+                arquivo_pdf=0,
                 destinatario_email=destinatarios,
                 status="erro",
                 observacao=erro_texto
@@ -160,8 +166,10 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
             erro_texto = f"Não foi possível localizar o arquivo PDF com o mesmo nome de {caminho_png}."
             _log_envio("pdf_nao_encontrado", caminho_png, destinatarios, erro=erro_texto)
             registrar_log_envio_email(
-                arquivo_png=caminho_png,
-                arquivo_excel=arquivo_excel,
+                nome_arquivo=nome_arquivo,
+                arquivo_png=0,
+                arquivo_excel=0,
+                arquivo_pdf=0,
                 destinatario_email=destinatarios,
                 status="erro",
                 observacao=erro_texto
@@ -322,8 +330,10 @@ Atenciosamente,
 
         _log_envio("sucesso", caminho_png, destinatarios, arquivo_excel)
         registrar_log_envio_email(
-            arquivo_png=caminho_png,
-            arquivo_excel=arquivo_excel,
+            nome_arquivo=nome_arquivo,
+            arquivo_png=1 if enviar_png else 0,
+            arquivo_excel=1 if enviar_xlsx and arquivo_excel else 0,
+            arquivo_pdf=1 if enviar_pdf and arquivo_pdf else 0,
             destinatario_email=destinatarios,
             status="sucesso",
             observacao=None
@@ -333,8 +343,10 @@ Atenciosamente,
         erro_texto = str(e)
         _log_envio("erro_envio", caminho_png, destinatarios, arquivo_excel, erro=erro_texto)
         registrar_log_envio_email(
-            arquivo_png=caminho_png,
-            arquivo_excel=arquivo_excel,
+            nome_arquivo=nome_arquivo,
+            arquivo_png=0,
+            arquivo_excel=0,
+            arquivo_pdf=0,
             destinatario_email=destinatarios,
             status="erro",
             observacao=erro_texto

@@ -90,6 +90,32 @@ def criar_tabela_fornecedores():
     garantir_colunas_fornecedores()
 
 
+def garantir_colunas_logs_envio_email():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("PRAGMA table_info(logs_envio_email)")
+    colunas = [coluna[1].upper() for coluna in cursor.fetchall()]
+
+    if "NOME_ARQUIVO" not in colunas:
+        cursor.execute("ALTER TABLE logs_envio_email ADD COLUMN nome_arquivo TEXT")
+    if "ARQUIVO_PNG" not in colunas:
+        cursor.execute("ALTER TABLE logs_envio_email ADD COLUMN arquivo_png INTEGER NOT NULL DEFAULT 0")
+    if "ARQUIVO_EXCEL" not in colunas:
+        cursor.execute("ALTER TABLE logs_envio_email ADD COLUMN arquivo_excel INTEGER NOT NULL DEFAULT 0")
+    if "ARQUIVO_PDF" not in colunas:
+        cursor.execute("ALTER TABLE logs_envio_email ADD COLUMN arquivo_pdf INTEGER NOT NULL DEFAULT 0")
+    if "DESTINATARIO_EMAIL" not in colunas:
+        cursor.execute("ALTER TABLE logs_envio_email ADD COLUMN destinatario_email TEXT")
+    if "STATUS" not in colunas:
+        cursor.execute("ALTER TABLE logs_envio_email ADD COLUMN status TEXT NOT NULL DEFAULT ''")
+    if "OBSERVACAO" not in colunas:
+        cursor.execute("ALTER TABLE logs_envio_email ADD COLUMN observacao TEXT")
+
+    conn.commit()
+    conn.close()
+
+
 def criar_tabela_logs_envio_email():
     conn = conectar()
     cursor = conn.cursor()
@@ -98,8 +124,10 @@ def criar_tabela_logs_envio_email():
         CREATE TABLE IF NOT EXISTS logs_envio_email (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             data_hora TEXT NOT NULL,
-            arquivo_png TEXT NOT NULL,
-            arquivo_excel TEXT,
+            nome_arquivo TEXT,
+            arquivo_png INTEGER NOT NULL DEFAULT 0,
+            arquivo_excel INTEGER NOT NULL DEFAULT 0,
+            arquivo_pdf INTEGER NOT NULL DEFAULT 0,
             destinatario_email TEXT,
             status TEXT NOT NULL,
             observacao TEXT
@@ -108,6 +136,7 @@ def criar_tabela_logs_envio_email():
 
     conn.commit()
     conn.close()
+    garantir_colunas_logs_envio_email()
 
 
 # =========================================
@@ -181,20 +210,24 @@ def validar_login(login, senha):
     return usuario
 
 
-def registrar_log_envio_email(arquivo_png, arquivo_excel, destinatario_email, status, observacao=None):
+def registrar_log_envio_email(nome_arquivo, arquivo_png, arquivo_excel, arquivo_pdf, destinatario_email, status, observacao=None):
+    garantir_colunas_logs_envio_email()
+
     conn = conectar()
     cursor = conn.cursor()
 
     cursor.execute(
         """
         INSERT INTO logs_envio_email
-            (data_hora, arquivo_png, arquivo_excel, destinatario_email, status, observacao)
-        VALUES (?, ?, ?, ?, ?, ?)
+            (data_hora, nome_arquivo, arquivo_png, arquivo_excel, arquivo_pdf, destinatario_email, status, observacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            arquivo_png,
-            arquivo_excel,
+            nome_arquivo,
+            1 if arquivo_png else 0,
+            1 if arquivo_excel else 0,
+            1 if arquivo_pdf else 0,
             destinatario_email,
             status,
             observacao
