@@ -13,7 +13,7 @@ from email.mime.application import MIMEApplication
 from email.utils import make_msgid
 
 
-from db_config import BANCO, registrar_log_envio_email, garantir_coluna_xlsx_fornecedores
+from db_config import BANCO, registrar_log_envio_email, garantir_colunas_fornecedores
 
 EXCEL_EXTS = [".xlsx", ".xlsb", ".xlsm"]
 LOG_FILE = Path(__file__).resolve().parent / "envio_email.log"
@@ -42,28 +42,44 @@ def _log_envio(status: str, caminho_png: str, destinatarios: str | None = None, 
 
 
 def _buscar_destinatarios(fornecedor: str):
-    garantir_coluna_xlsx_fornecedores()
+    garantir_colunas_fornecedores()
 
     fornecedor_normalizado = _normalizar_texto(fornecedor)
 
     conn = sqlite3.connect(BANCO)
     cursor = conn.cursor()
-    cursor.execute("SELECT fornecedor, email_destinatario, XLSX FROM fornecedores")
+    cursor.execute("SELECT fornecedor, email_destinatario, XLSX, PNG, PDF FROM fornecedores")
     linhas = cursor.fetchall()
     conn.close()
 
-    for nome, emails, xlsx in linhas:
+    for nome, emails, xlsx, png, pdf in linhas:
         if nome is None or emails is None:
             continue
         if _normalizar_texto(nome) == fornecedor_normalizado:
-            if xlsx is None:
-                return emails, 1
-            if isinstance(xlsx, str):
-                valor = xlsx.strip().lower()
-                return emails, 1 if valor in {"1", "true", "sim", "s", "yes"} else 0
-            return emails, 1 if int(xlsx) == 1 else 0
+            return (
+                emails,
+                _normalizar_flag(xlsx, default=1),
+                _normalizar_flag(png, default=1),
+                _normalizar_flag(pdf, default=0)
+            )
 
-    return None, 1
+    return None, 1, 1, 0
+
+
+def _normalizar_flag(valor, default: int) -> int:
+    if valor is None:
+        return default
+    if isinstance(valor, int):
+        return 1 if valor == 1 else 0
+    if isinstance(valor, str):
+        texto = valor.strip().lower()
+        if texto in {"1", "true", "sim", "s", "yes"}:
+            return 1
+        return 0
+    try:
+        return 1 if int(valor) == 1 else 0
+    except Exception:
+        return default
 
 
 def _encontrar_excel_para_png(caminho_png: str) -> str | None:
@@ -86,10 +102,30 @@ def _encontrar_excel_para_png(caminho_png: str) -> str | None:
     return None
 
 
+def _encontrar_pdf_para_png(caminho_png: str) -> str | None:
+    caminho_png = os.path.abspath(caminho_png)
+    pasta = Path(caminho_png).parent
+    nome_base = Path(caminho_png).stem
+
+    candidato = pasta / f"{nome_base}.pdf"
+    if candidato.exists():
+        return str(candidato)
+
+    raiz = Path(__file__).resolve().parent
+    candidato = raiz / f"{nome_base}.pdf"
+    if candidato.exists():
+        return str(candidato)
+
+    for arquivo in raiz.rglob(f"{nome_base}.pdf"):
+        return str(arquivo)
+
+    return None
+
+
 def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     caminho_png = os.path.abspath(caminho_png)
     fornecedor = Path(caminho_png).parent.name
-    destinatarios, enviar_xlsx = _buscar_destinatarios(fornecedor)
+    destinatarios, enviar_xlsx, enviar_png, enviar_pdf = _buscar_destinatarios(fornecedor)
 
     if not destinatarios:
         _log_envio("no_destinatario", caminho_png)
@@ -116,7 +152,22 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
                 observacao=erro_texto
             )
             raise FileNotFoundError(erro_texto)
-    
+
+    arquivo_pdf = None
+    if enviar_pdf:
+        arquivo_pdf = _encontrar_pdf_para_png(caminho_png)
+        if arquivo_pdf is None:
+            erro_texto = f"Não foi possível localizar o arquivo PDF com o mesmo nome de {caminho_png}."
+            _log_envio("pdf_nao_encontrado", caminho_png, destinatarios, erro=erro_texto)
+            registrar_log_envio_email(
+                arquivo_png=caminho_png,
+                arquivo_excel=arquivo_excel,
+                destinatario_email=destinatarios,
+                status="erro",
+                observacao=erro_texto
+            )
+            raise FileNotFoundError(erro_texto)
+
     msg = MIMEMultipart("related")
 
     msg["From"] = REMETENTE
@@ -129,13 +180,12 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     <html>
     <body>
 
-    <p>O arquivo atualizado está abaixo:</p>
+    <p>Olá! Segue atualização do acompanhamento:</p>
 
-    <p>
-    <img src="cid:{cid_img}" width="1000">
-    </p>
+    {f'<p><img src="cid:{cid_img}" width="1000"></p>' if enviar_png else '<p>O corpo do e-mail não inclui o preview em PNG.</p>'}
 
-    {f'<p>Arquivo Excel anexado: <b>{Path(arquivo_excel).name}</b></p>' if enviar_xlsx and arquivo_excel else '<p>Este envio não inclui anexo em Excel.</p>'}
+    {f'<p>Arquivo Excel anexado: <b>{Path(arquivo_excel).name}</b></p>' if enviar_xlsx and arquivo_excel else ''}
+    {f'<p>Arquivo PDF anexado: <b>{Path(arquivo_pdf).name}</b></p>' if enviar_pdf and arquivo_pdf else ''}
 
     </body>
     </html>
@@ -161,22 +211,23 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
 
     # PNG embutido
 
-    with open(caminho_png, "rb") as f:
+    if enviar_png:
+        with open(caminho_png, "rb") as f:
 
-        imagem = MIMEImage(f.read())
+            imagem = MIMEImage(f.read())
 
-        imagem.add_header(
-            "Content-ID",
-            f"<{cid_img}>"
-        )
+            imagem.add_header(
+                "Content-ID",
+                f"<{cid_img}>"
+            )
 
-        imagem.add_header(
-            "Content-Disposition",
-            "inline",
-            filename=os.path.basename(caminho_png)
-        )
+            imagem.add_header(
+                "Content-Disposition",
+                "inline",
+                filename=os.path.basename(caminho_png)
+            )
 
-        msg.attach(imagem)
+            msg.attach(imagem)
 
     # Excel anexado
 
@@ -194,6 +245,23 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
             )
 
             msg.attach(anexo)
+
+    # PDF anexado
+
+    if enviar_pdf and arquivo_pdf:
+        with open(arquivo_pdf, "rb") as f:
+
+            anexo_pdf = MIMEApplication(f.read())
+
+            anexo_pdf.add_header(
+                "Content-Disposition",
+                "attachment",
+                filename=os.path.basename(
+                    arquivo_pdf
+                )
+            )
+
+            msg.attach(anexo_pdf)
 
     
 

@@ -50,15 +50,21 @@ def criar_tabela():
     conn.close()
 
 
-def garantir_coluna_xlsx_fornecedores():
+def garantir_colunas_fornecedores():
     conn = conectar()
     cursor = conn.cursor()
 
     cursor.execute("PRAGMA table_info(fornecedores)")
-    colunas = [coluna[1] for coluna in cursor.fetchall()]
+    colunas = [coluna[1].upper() for coluna in cursor.fetchall()]
 
-    if not any(coluna.upper() == "XLSX" for coluna in colunas):
+    if "XLSX" not in colunas:
         cursor.execute("ALTER TABLE fornecedores ADD COLUMN XLSX INTEGER DEFAULT 1")
+
+    if "PNG" not in colunas:
+        cursor.execute("ALTER TABLE fornecedores ADD COLUMN PNG INTEGER DEFAULT 1")
+
+    if "PDF" not in colunas:
+        cursor.execute("ALTER TABLE fornecedores ADD COLUMN PDF INTEGER DEFAULT 0")
 
     conn.commit()
     conn.close()
@@ -73,13 +79,15 @@ def criar_tabela_fornecedores():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fornecedor TEXT NOT NULL,
             email_destinatario TEXT,
-            XLSX INTEGER DEFAULT 1
+            XLSX INTEGER DEFAULT 1,
+            PNG INTEGER DEFAULT 1,
+            PDF INTEGER DEFAULT 0
         )
     """)
 
     conn.commit()
     conn.close()
-    garantir_coluna_xlsx_fornecedores()
+    garantir_colunas_fornecedores()
 
 
 def criar_tabela_logs_envio_email():
