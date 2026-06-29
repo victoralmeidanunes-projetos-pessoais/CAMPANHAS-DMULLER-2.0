@@ -175,17 +175,26 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     msg["Subject"] = f"Atualização: {Path(caminho_png).name}"
 
     cid_img = make_msgid()[1:-1]
+    cid_assinatura = make_msgid()[1:-1]
+
+    saudacao = "Bom dia" if datetime.now().hour <= 12 else "Boa tarde"
+    nome_arquivo = Path(caminho_png).stem
+    assinatura_path = Path(__file__).resolve().parent / "ASSINATURA.png"
+    tem_assinatura = assinatura_path.exists()
 
     html = f"""
     <html>
     <body>
 
-    <p>Olá! Segue atualização do acompanhamento:</p>
+    <p><strong>{saudacao}!</strong></p>
+    <p>Segue atualização do "{nome_arquivo}"</p>
 
-    {f'<p><img src="cid:{cid_img}" width="1000"></p>' if enviar_png else '<p>O corpo do e-mail não inclui o preview em PNG.</p>'}
+    {f'<p><img src="cid:{cid_img}" width="1000"></p>' if enviar_png else ''}
 
-    {f'<p>Arquivo Excel anexado: <b>{Path(arquivo_excel).name}</b></p>' if enviar_xlsx and arquivo_excel else ''}
-    {f'<p>Arquivo PDF anexado: <b>{Path(arquivo_pdf).name}</b></p>' if enviar_pdf and arquivo_pdf else ''}
+    <p>Dúvidas estou à disposição!</p>
+
+    <p>Atenciosamente,</p>
+    {f'<p><img src="cid:{cid_assinatura}" style="max-width:400px; height:auto;"></p>' if tem_assinatura else ''}
 
     </body>
     </html>
@@ -193,9 +202,21 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
 
     alternativo = MIMEMultipart("alternative")
 
+    texto_principal = f"""
+{saudacao}!
+
+Segue atualização do \"{nome_arquivo}\".
+
+{'[PNG enviado em anexo]' if enviar_png else ''}
+
+Dúvidas estou à disposição!
+
+Atenciosamente,
+"""
+
     alternativo.attach(
         MIMEText(
-            "Segue atualização da campanha.",
+            texto_principal,
             "plain"
         )
     )
@@ -228,6 +249,22 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
             )
 
             msg.attach(imagem)
+
+    # Assinatura embutida
+
+    if tem_assinatura:
+        with open(assinatura_path, "rb") as f:
+            assinatura = MIMEImage(f.read())
+            assinatura.add_header(
+                "Content-ID",
+                f"<{cid_assinatura}>"
+            )
+            assinatura.add_header(
+                "Content-Disposition",
+                "inline",
+                filename=os.path.basename(assinatura_path)
+            )
+            msg.attach(assinatura)
 
     # Excel anexado
 
