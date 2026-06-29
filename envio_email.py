@@ -283,7 +283,15 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
 
             smtp.send_message(msg)
 
-        print("Email enviado com sucesso!")
+        _log_envio("sucesso", caminho_png, destinatarios, arquivo_excel)
+        registrar_log_envio_email(
+            arquivo_png=caminho_png,
+            arquivo_excel=arquivo_excel,
+            destinatario_email=destinatarios,
+            status="sucesso",
+            observacao=None
+        )
+        return True
     except Exception as e:
         erro_texto = str(e)
         _log_envio("erro_envio", caminho_png, destinatarios, arquivo_excel, erro=erro_texto)

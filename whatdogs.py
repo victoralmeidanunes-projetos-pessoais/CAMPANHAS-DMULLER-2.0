@@ -311,15 +311,15 @@ class MonitorExcel(FileSystemEventHandler):
                     print("\nEnviando email fornecedor...")
                     enviado = enviar_email_fornecedor_por_png(png)
 
-                    if enviado:
+                    if enviado is True:
                         print("✔ Email enviado com sucesso")
-                    else:
+                    elif enviado is False:
                         print("⚠ Email não enviado (sem fornecedor)")
-
+                    else:
+                        print("⚠ Resultado desconhecido do envio de email")
                 except Exception as e:
                     print("❌ Erro envio email:", e)
 
-            # =================================
             # GIT
             # =================================
 
