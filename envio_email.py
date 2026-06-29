@@ -187,14 +187,14 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     <body>
 
     <p><strong>{saudacao}!</strong></p>
-    <p>Segue atualização do "{nome_arquivo}"</p>
+    <p>Segue atualização do {nome_arquivo}</p>
 
     {f'<p><img src="cid:{cid_img}" width="1000"></p>' if enviar_png else ''}
 
     <p>Dúvidas estou à disposição!</p>
 
     <p>Atenciosamente,</p>
-    {f'<p><img src="cid:{cid_assinatura}" style="max-width:400px; height:auto;"></p>' if tem_assinatura else ''}
+    {f'<p><img src="cid:{cid_assinatura}" style="max-width:600px; height:auto;"></p>' if tem_assinatura else ''}
 
     </body>
     </html>
@@ -205,7 +205,7 @@ def enviar_email_fornecedor_por_png(caminho_png: str) -> bool:
     texto_principal = f"""
 {saudacao}!
 
-Segue atualização do \"{nome_arquivo}\".
+Segue atualização do {nome_arquivo}.
 
 {'[PNG enviado em anexo]' if enviar_png else ''}
 
