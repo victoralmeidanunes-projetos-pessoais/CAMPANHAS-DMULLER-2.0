@@ -20,13 +20,16 @@ from db_config import (
 
 from historico import (listar_atualizacoes,listar_ultimas_atualizacoes, listar_atualizacoes_periodo)
 
+
+
+
 # =========================================
 # BANCO
 # =========================================
 # Inicializa as tabelas necessárias no banco local antes de carregar o app.
 criar_tabela()
 
-
+@st.cache_data
 def carregar_campanhas():
     # usa a conexão local SQLite do usuarios.db para carregar a tabela CAMPANHAS
     conn = conectar()
@@ -943,6 +946,8 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
 
                 dados_campanhas.append(registro)
 
+        
+
             # iniciais do filtro
             status_padrao = "ABERTA"
             status_col = next((c for c in colunas if c.upper() == "STATUS"), None)
@@ -981,18 +986,9 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
                     valores_data = []
                     for registro in dados_campanhas:
                         valor = registro.get(data_pagamento_col)
-                        data = None
-                        if isinstance(valor, datetime):
-                            data = valor
-                        elif isinstance(valor, str):
-                            for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d", "%d-%m-%Y", "%m/%Y", "%Y/%m"]:
-                                try:
-                                    data = datetime.strptime(valor.strip(), fmt)
-                                    break
-                                except Exception:
-                                    continue
-                        if data:
-                            valores_data.append(data.strftime("%m/%Y"))
+
+                        if valor:
+                            valores_data.append(str(valor).strip().upper())
 
                     meses_ano = sorted(set(valores_data), key=lambda x: (int(x.split("/")[1]), int(x.split("/")[0])))
                     meses_ano = [f for f in meses_ano if f]
@@ -1035,11 +1031,9 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
                         continue
 
                 if data_pagamento_col and selecao_data:
-                    valor_data = parse_date(registro.get(data_pagamento_col))
-                    if valor_data is None:
-                        continue
-                    mes_ano = valor_data.strftime("%m/%Y")
-                    if mes_ano not in selecao_data:
+                    mes_ano = str(registro.get(data_pagamento_col, "")).strip().upper()
+
+                    if selecao_data and mes_ano not in selecao_data:
                         continue
 
                 registros_filtrados.append(registro)
@@ -1053,6 +1047,35 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
                     s = f"{f:,.2f}"
                     s = s.replace(',', 'X').replace('.', ',').replace('X', '.')
                     return f"R$ {s}"
+                
+                # ============================
+                # TOTAL DISPONIBILIZADO
+                # ============================
+
+                total_disponibilizado = 0.0
+
+                for r in registros_filtrados:
+                    valor = r.get("DISPONIBILIZADO", 0)
+
+                    try:
+                        if valor is None:
+                            valor = 0
+
+                        if isinstance(valor, str):
+                            valor = (
+                                valor.replace("R$", "")
+                                    .replace(".", "")
+                                    .replace(",", ".")
+                                    .strip()
+                            )
+
+                        total_disponibilizado += float(valor)
+
+                    except Exception:
+                        pass
+
+
+            
 
                 # tabela 1: total por fornecedor (primeira tabela)
                 totals_fornecedor = {}
@@ -1201,11 +1224,23 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
                                         unique_campaigns = int(df[camp_col].nunique())
                                         unique_cod = int(df[code_col].nunique())
 
+
+
+                                        # Percentual utilizado
+                                        percentual_utilizado = 0.0
+
+                                        if total_disponibilizado > 0:
+                                            percentual_utilizado = (
+                                                total_valor / total_disponibilizado
+                                            ) 
+
                                     # preenche métricas no placeholder criado logo após os filtros
-                                    metrics_cols = metrics_placeholder.columns(3)
-                                    metrics_cols[0].metric("💰 Total Premiados (filtrados)", fmt_currency(total_valor))
-                                    metrics_cols[1].metric("📁 Campanhas únicas", unique_campaigns)
-                                    metrics_cols[2].metric("👥 Cód. pessoa únicos", unique_cod)
+                                    metrics_cols = metrics_placeholder.columns(5)
+                                    metrics_cols[1].metric("💰 Total Premiados (filtrados)", fmt_currency(total_valor))
+                                    metrics_cols[3].metric("📁 Campanhas únicas", unique_campaigns)
+                                    metrics_cols[4].metric("👥 Cód. pessoa únicos", unique_cod)
+                                    metrics_cols[0].metric("🏦 Total Disponibilizado",fmt_currency(total_disponibilizado))
+                                    metrics_cols[2].metric("📈 % Utilizado", f"{percentual_utilizado:.2f}%".replace(".", ","))
 
                                     # formatar colunas de valor para exibição no df_display
                                     if valor_col_local and valor_col_local in df_display.columns:
