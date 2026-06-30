@@ -7,7 +7,7 @@ from datetime import datetime
 # =========================================
 # BANCO
 # =========================================
-
+# Define o caminho do banco de dados local SQLite e fornece conexão ao arquivo.
 BASE_DIR = os.path.dirname(
     os.path.abspath(__file__)
 )
@@ -18,6 +18,7 @@ BANCO = os.path.join(
 )
 
 
+# Abre conexão com o banco SQLite local e exibe o caminho do arquivo.
 def conectar():
 
     print("\n" + "=" * 70)
@@ -31,6 +32,7 @@ def conectar():
 # =========================================
 # TABELA USUÁRIOS
 # =========================================
+# Cria a tabela de usuários com campos básicos de login e perfil.
 
 def criar_tabela():
 
@@ -51,6 +53,7 @@ def criar_tabela():
 
 
 def garantir_colunas_fornecedores():
+    # Garante que a tabela de fornecedores contenha colunas de tipo de arquivo.
     conn = conectar()
     cursor = conn.cursor()
 
@@ -71,6 +74,7 @@ def garantir_colunas_fornecedores():
 
 
 def criar_tabela_fornecedores():
+    # Cria a tabela de fornecedores usada por outros módulos do projeto.
     conn = conectar()
     cursor = conn.cursor()
 
@@ -91,6 +95,7 @@ def criar_tabela_fornecedores():
 
 
 def garantir_colunas_logs_envio_email():
+    # Garante que a tabela de logs de envio de email tenha todas as colunas esperadas.
     conn = conectar()
     cursor = conn.cursor()
 
@@ -117,6 +122,7 @@ def garantir_colunas_logs_envio_email():
 
 
 def criar_tabela_logs_envio_email():
+    # Cria a tabela de logs de envio de email para auditoria e rastreamento.
     conn = conectar()
     cursor = conn.cursor()
 
@@ -182,6 +188,7 @@ def criar_usuario(login, senha, perfil):
 # LOGIN
 # =========================================
 
+# Valida as credenciais do usuário e retorna o registro correspondente.
 def validar_login(login, senha):
 
     conn = conectar()
@@ -210,6 +217,7 @@ def validar_login(login, senha):
     return usuario
 
 
+# Insere um registro de log de envio de email na tabela logs_envio_email.
 def registrar_log_envio_email(nome_arquivo, arquivo_png, arquivo_excel, arquivo_pdf, destinatario_email, status, observacao=None):
     garantir_colunas_logs_envio_email()
 
@@ -238,9 +246,50 @@ def registrar_log_envio_email(nome_arquivo, arquivo_png, arquivo_excel, arquivo_
     conn.close()
 
 
+# Busca registros de logs de envio de email com filtro de datas.
+def listar_logs_envio_email(data_inicio=None, data_fim=None):
+    conn = conectar()
+    cursor = conn.cursor()
+
+    query = "SELECT nome_arquivo, destinatario_email, status, data_hora, arquivo_excel, arquivo_png, arquivo_pdf FROM logs_envio_email"
+
+    conditions = []
+    params = []
+
+    if data_inicio is not None:
+        conditions.append("data_hora >= ?")
+        params.append(data_inicio.strftime("%Y-%m-%d %H:%M:%S"))
+    if data_fim is not None:
+        conditions.append("data_hora <= ?")
+        params.append(data_fim.strftime("%Y-%m-%d %H:%M:%S"))
+
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
+    query += " ORDER BY data_hora DESC"
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [
+        {
+            "nome_arquivo": row[0],
+            "destinatario_email": row[1],
+            "status": row[2],
+            "data_hora": row[3],
+            "arquivo_excel": row[4],
+            "arquivo_png": row[5],
+            "arquivo_pdf": row[6]
+        }
+        for row in rows
+    ]
+
+
 import streamlit as st
 
 @st.cache_resource
+# Conecta ao Supabase usando as credenciais definidas em st.secrets.
 def conectar_supabase():
     try:
         from supabase import create_client

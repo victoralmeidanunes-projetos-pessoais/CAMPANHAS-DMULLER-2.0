@@ -1,5 +1,5 @@
 # pip install watchdog pywin32 pillow
-
+# Importa dependências para monitorar arquivos e processar eventos de sistema.
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -21,11 +21,13 @@ from envio_email import enviar_email_fornecedor_por_png
 # =====================================
 # CONFIG GIT
 # =====================================
+# Define o diretório do projeto e as funções que automatizam commits e push no Git.
 
 PROJETO_DIR = r"B:\Victor\ACOMPANHAMENTOS\PROJETO"
 
 
 def enviar_git():
+    # Executa comandos Git para salvar e enviar alterações automaticamente.
     try:
         subprocess.run("git add .", cwd=PROJETO_DIR, shell=True, check=True)
 
@@ -49,18 +51,20 @@ def enviar_git():
 # =====================================
 # ARQUIVOS
 # =====================================
+# Carrega os caminhos monitorados da tabela CAMPANHAS do banco e converte em um mapeamento de origem/destino.
 
-def carregar_caminhos_monitoramento():
+def carregar_campanhas():
+    # Lê a tabela CAMPANHAS do banco e retorna lista de registros válidos.
     conn = conectar()
     cursor = conn.cursor()
 
     try:
-        cursor.execute("SELECT origem, destino FROM caminhos_monitoramento")
+        cursor.execute("SELECT ORIGEM, DESTINO FROM CAMPANHAS")
         linhas = cursor.fetchall()
     except Exception as exc:
         conn.close()
         raise RuntimeError(
-            "Falha ao carregar caminhos_monitoramento de usuarios.db: "
+            "Falha ao carregar CAMPANHAS de usuarios.db: "
             f"{exc}"
         ) from exc
 
@@ -77,25 +81,28 @@ def carregar_caminhos_monitoramento():
 
     if not arquivos:
         raise RuntimeError(
-            "A tabela caminhos_monitoramento está vazia ou não possui registros válidos."
+            "A tabela CAMPANHAS está vazia ou não possui registros válidos."
         )
 
     return arquivos
 
 
-ARQUIVOS = carregar_caminhos_monitoramento()
+ARQUIVOS = carregar_campanhas()
 
 MAPA = {
     os.path.abspath(a["origem"]).lower(): os.path.abspath(a["destino"])
     for a in ARQUIVOS
 }
 
+# Mapeamento origem -> destino usado pelo monitor de arquivos.
 
 # =====================================
 # PREVIEW EXCEL
 # =====================================
+# Gera imagem de preview de arquivos Excel usando COM e clipboard.
 
 def gerar_preview_excel(caminho_excel):
+    # Abre o arquivo Excel no COM, copia a planilha como imagem e salva em PNG.
     pythoncom.CoInitialize()
 
     try:
@@ -150,8 +157,10 @@ def gerar_preview_excel(caminho_excel):
 # =====================================
 # MONITOR
 # =====================================
+# Define o observador de arquivos e processa eventos de alteração para copiar, gerar preview e enviar email.
 
 class MonitorExcel(FileSystemEventHandler):
+    # Observador de arquivos que responde a alterações em planilhas Excel.
 
     ultimo_processamento = {}
 
