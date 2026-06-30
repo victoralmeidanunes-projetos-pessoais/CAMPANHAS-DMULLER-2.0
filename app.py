@@ -125,7 +125,7 @@ if not st.session_state.logado:
 # =========================================
 
 st.set_page_config(
-    page_title="Acompanhamentos",
+    page_title="CAMPANHAS",
     layout="wide", 
     page_icon="📊"
 )
@@ -362,15 +362,15 @@ if os.path.exists(PASTA_RAIZ):
 # =========================================
 # CABEÇALHO
 # =========================================
-# Mostra título e resumo geral dos acompanhamentos ativos.
+# Mostra título e resumo geral dos CAMPANHAS ativos.
 
 st.markdown(
     """
     <div class='hero-card'>
         <div style='display:flex; flex-wrap:wrap; gap:1rem; align-items:center; justify-content:space-between;'>
             <div style='min-width:260px;'>
-                <h1 style='margin-bottom:0.25rem; font-size:2.65rem; color:#0f172a;'>ACOMPANHAMENTOS ATIVOS</h1>
-                <p style='margin:0; color:#475569; font-size:1rem;'>Painel moderno para navegar, filtrar e acessar seus acompanhamentos rapidamente.</p>
+                <h1 style='margin-bottom:0.25rem; font-size:2.65rem; color:#0f172a;'>CAMPANHAS ATIVOS</h1>
+                <p style='margin:0; color:#475569; font-size:1rem;'>Painel moderno para navegar, filtrar e acessar seus CAMPANHAS rapidamente.</p>
             </div>
         </div>
     </div>
@@ -386,7 +386,7 @@ for pauta, lista in fornecedores_por_pauta.items():
 
     total = contagem_pautas[pauta]
 
-    with st.expander(f"📁 {pauta} | {total} acompanhamentos", expanded=False):
+    with st.expander(f"📁 {pauta} | {total} CAMPANHAS", expanded=False):
 
         st.markdown(f"""
         <div style="
@@ -395,7 +395,7 @@ for pauta, lista in fornecedores_por_pauta.items():
             border-radius: 1rem;
             border: 1px solid rgba(15, 23, 42, 0.08);
             margin-bottom: 0.85rem;">
-            <div style='font-weight:700; color:#0f172a;'>📁 {pauta} | {total} acompanhamentos</div>
+            <div style='font-weight:700; color:#0f172a;'>📁 {pauta} | {total} CAMPANHAS</div>
             <div style='color:#475569; margin-top:0.25rem;'>Fornecedores listados: {len(lista)}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -476,7 +476,7 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
 
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "📄 MECÂNICAS",
-        "📊 ACOMPANHAMENTOS",
+        "📊 CAMPANHAS",
         "🔐 ACESSOS",
         "🕛 ATUALIZAÇÕES",
         "📧 LOGS ENVIO EMAIL",
@@ -487,7 +487,7 @@ else:
 
     tab1, tab2, tab4 = st.tabs([
         "📄 MECÂNICAS",
-        "📊 ACOMPANHAMENTOS",
+        "📊 CAMPANHAS",
         "🕛 ATUALIZAÇÕES"
     ])
 
@@ -1377,5 +1377,5 @@ with tab4:
 
 
 st.sidebar.write(
-    f"ACOMPANHAMENTOS: {contador}"
+    f"CAMPANHAS: {contador}"
 )
