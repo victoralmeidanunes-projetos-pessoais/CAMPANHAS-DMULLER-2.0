@@ -362,14 +362,14 @@ if os.path.exists(PASTA_RAIZ):
 # =========================================
 # CABEÇALHO
 # =========================================
-# Mostra título e resumo geral dos CAMPANHAS ativos.
+# Mostra título e resumo geral dos CAMPANHAS ATIVAS.
 
 st.markdown(
     """
     <div class='hero-card'>
         <div style='display:flex; flex-wrap:wrap; gap:1rem; align-items:center; justify-content:space-between;'>
             <div style='min-width:260px;'>
-                <h1 style='margin-bottom:0.25rem; font-size:2.65rem; color:#0f172a;'>CAMPANHAS ATIVOS</h1>
+                <h1 style='margin-bottom:0.25rem; font-size:2.65rem; color:#0f172a;'>CAMPANHAS ATIVAS</h1>
                 <p style='margin:0; color:#475569; font-size:1rem;'>Painel moderno para navegar, filtrar e acessar seus CAMPANHAS rapidamente.</p>
             </div>
         </div>
