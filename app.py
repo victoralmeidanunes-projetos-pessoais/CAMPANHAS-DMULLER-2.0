@@ -480,7 +480,7 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
         "🔐 ACESSOS",
         "🕛 ATUALIZAÇÕES",
         "📧 LOGS ENVIO EMAIL",
-        "🗂️ CAMPANHAS"
+        "💵 PAGAMENTOS CAMPANHAS"
     ])
 
 else:
@@ -898,7 +898,7 @@ if st.session_state.perfil == "ADMINISTRADOR MASTER":
 
     with tab6:
 
-        st.title("🗂️ Campanhas")
+        st.title("💵 PAGAMENTOS CAMPANHAS")
 
         try:
             colunas, linhas = carregar_campanhas()
