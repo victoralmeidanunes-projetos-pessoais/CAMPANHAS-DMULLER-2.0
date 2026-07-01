@@ -619,6 +619,11 @@ def renderizar_tela_pagamentos_campanhas():
                         equipe_filtrada,
                     )
 
+                    total_valor = 0.0
+                    unique_campaigns = len(campanhas_visiveis)
+                    unique_cod = 0
+                    percentual_utilizado = 0.0
+
                     if premiados_data:
                         with st.expander("🏆 Premiados — relacionados às campanhas visíveis", expanded=False):
                             st.markdown("---")
@@ -645,10 +650,6 @@ def renderizar_tela_pagamentos_campanhas():
                                     if valor_col_local is None and "VALOR" in coluna_norm:
                                         valor_col_local = coluna
 
-                                total_valor = 0.0
-                                unique_campaigns = 0
-                                unique_cod = 0
-                                percentual_utilizado = 0.0
                                 if valor_col_local and camp_col and code_col and len(df) > 0:
                                     total_valor = df[valor_col_local].apply(_converter_para_float).sum()
                                     unique_campaigns = int(df[camp_col].nunique())
@@ -656,13 +657,6 @@ def renderizar_tela_pagamentos_campanhas():
 
                                     if total_disponibilizado > 0:
                                         percentual_utilizado = total_valor / total_disponibilizado
-
-                                metrics_cols = metrics_placeholder.columns(5)
-                                metrics_cols[1].metric("💰 Total Premiados (filtrados)", formatar_valor_brl(total_valor))
-                                metrics_cols[3].metric("📁 Campanhas únicas", unique_campaigns)
-                                metrics_cols[4].metric("👥 Cód. pessoa únicos", unique_cod)
-                                metrics_cols[0].metric("🏦 Total Disponibilizado", formatar_valor_brl(total_disponibilizado))
-                                metrics_cols[2].metric("📈 % Utilizado", f"{percentual_utilizado:.2f}%".replace(".", ","))
 
                                 if valor_col_local and valor_col_local in df_display.columns:
                                     df_display[valor_col_local] = df_display[valor_col_local].apply(
@@ -718,6 +712,13 @@ def renderizar_tela_pagamentos_campanhas():
                                 st.error(f"Erro gerando visualizações de premiados: {exc}")
                     else:
                         st.info("Nenhum premiado encontrado para as campanhas visíveis.")
+
+                    metrics_cols = metrics_placeholder.columns(5)
+                    metrics_cols[0].metric("🏦 Total Disponibilizado", formatar_valor_brl(total_disponibilizado))
+                    metrics_cols[1].metric("💰 Total Premiados (filtrados)", formatar_valor_brl(total_valor))
+                    metrics_cols[2].metric("📈 % Utilizado", f"{percentual_utilizado:.2f}%".replace(".", ","))
+                    metrics_cols[3].metric("📁 Campanhas únicas", unique_campaigns)
+                    metrics_cols[4].metric("👥 Cód. pessoa únicos", unique_cod)
                 else:
                     st.info("Nenhuma campanha encontrada entre os registros filtrados.")
             else:
