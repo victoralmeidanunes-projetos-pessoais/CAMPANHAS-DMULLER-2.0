@@ -597,93 +597,71 @@ with tab2:
             )
 
 
-            previews_exibidos = set()
+            imagens_exibidas = set()
+            imagens_por_base = {}
 
             for arq in arquivos:
-
                 if arq.startswith("~$"):
                     continue
 
                 nome_lower = arq.lower()
+                ext = os.path.splitext(arq)[1].lower()
 
-                # SOMENTE PREVIEW
-                if "_preview" not in nome_lower:
+                if ext not in EXT_IMAGEM:
                     continue
 
-                if not nome_lower.endswith(".png"):
+                nome_sem_ext = os.path.splitext(arq)[0].lower()
+                nome_base = nome_sem_ext[:-len("_preview")] if nome_sem_ext.endswith("_preview") else nome_sem_ext
+
+                if nome_base not in imagens_por_base:
+                    imagens_por_base[nome_base] = {"preview": None, "base": None}
+
+                if nome_sem_ext.endswith("_preview"):
+                    imagens_por_base[nome_base]["preview"] = arq
+                else:
+                    imagens_por_base[nome_base]["base"] = arq
+
+            for nome_base, dados in sorted(imagens_por_base.items()):
+                if nome_base in imagens_exibidas:
                     continue
 
-                nome_base = nome_lower.replace(
-                    "_preview.png",
-                    ""
-                )
+                imagens_exibidas.add(nome_base)
 
-                if nome_base in previews_exibidos:
+                arquivo_imagem = dados.get("preview") or dados.get("base")
+                if not arquivo_imagem:
                     continue
 
-                previews_exibidos.add(nome_base)
-
-                caminho_preview = os.path.join(
-                    pasta,
-                    arq
-                )
+                caminho_imagem = os.path.join(pasta, arquivo_imagem)
 
                 st.markdown(f"## {f}")
                 st.caption(p)
 
                 st.image(
-                    caminho_preview,
+                    caminho_imagem,
                     use_container_width=True
                 )
 
-                # =====================================
-                # EXCEL RELACIONADO
-                # =====================================
-
                 excel_relacionado = None
-
                 for arquivo_excel in arquivos:
-
                     if arquivo_excel.startswith("~$"):
                         continue
 
-                    nome_excel = os.path.splitext(
-                        arquivo_excel
-                    )[0].lower()
-
-                    ext_excel = os.path.splitext(
-                        arquivo_excel
-                    )[1].lower()
+                    nome_excel = os.path.splitext(arquivo_excel)[0].lower()
+                    ext_excel = os.path.splitext(arquivo_excel)[1].lower()
 
                     if ext_excel not in EXT_EXCEL:
                         continue
 
                     if nome_excel == nome_base:
-
-                        excel_relacionado = os.path.join(
-                            pasta,
-                            arquivo_excel
-                        )
-
+                        excel_relacionado = os.path.join(pasta, arquivo_excel)
                         break
 
-                # =====================================
-                # BOTÃO DOWNLOAD EXCEL
-                # =====================================
-
                 if excel_relacionado:
-
-                    with open(
-                        excel_relacionado,
-                        "rb"
-                    ) as file_excel:
-
+                    with open(excel_relacionado, "rb") as file_excel:
                         st.download_button(
                             label="📥 Baixar Excel",
                             data=file_excel,
-                            file_name=os.path.basename(
-                                excel_relacionado
-                            ),
+                            file_name=os.path.basename(excel_relacionado),
                             mime="application/vnd.ms-excel"
                         )
 
