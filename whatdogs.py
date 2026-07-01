@@ -43,7 +43,7 @@ def enviar_git():
 
         subprocess.run("git push", cwd=PROJETO_DIR, shell=True, check=True)
 
-        print("publicado no GotHub - ✔️")
+        print("Publicado no GitHub - ✔️")
 
     except subprocess.CalledProcessError as exc:
         raise RuntimeError(f"Erro ao publicar no GitHub: {exc}") from exc
@@ -139,7 +139,7 @@ def gerar_preview_excel(caminho_excel):
         caminho_preview = os.path.splitext(caminho_excel)[0] + ".png"
         imagem.save(caminho_preview)
 
-        print("gerado preve e colocado na pasta - ✔️")
+        print("Gerado preview e colocado na pasta - ✔️")
         return caminho_preview
 
     except Exception as exc:

@@ -17,14 +17,19 @@ BANCO = os.path.join(
     "usuarios.db"
 )
 
+_BANCO_AVISO_EXIBIDO = False
+
 
 # Abre conexão com o banco SQLite local e exibe o caminho do arquivo.
 def conectar():
+    global _BANCO_AVISO_EXIBIDO
 
-    print("\n" + "=" * 70)
-    print("BANCO UTILIZADO:")
-    print(os.path.abspath(BANCO))
-    print("=" * 70 + "\n")
+    if not _BANCO_AVISO_EXIBIDO:
+        print("\n" + "=" * 70)
+        print("BANCO UTILIZADO:")
+        print(os.path.abspath(BANCO))
+        print("=" * 70 + "\n")
+        _BANCO_AVISO_EXIBIDO = True
 
     return sqlite3.connect(BANCO)
 
