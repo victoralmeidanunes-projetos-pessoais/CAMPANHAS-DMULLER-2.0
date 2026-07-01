@@ -281,9 +281,9 @@ def carregar_logs_envio_periodo(data_inicio=None, data_fim=None):
             "destinatário": registro.get("destinatario_email", ""),
             "status": status_icon,
             "data_hora": data_hora,
-            "arquivo_xlsx": "✅" if registro.get("arquivo_excel", 0) == 1 else "❌",
-            "arquivo_png": "✅" if registro.get("arquivo_png", 0) == 1 else "❌",
-            "arquivo_pdf": "✅" if registro.get("arquivo_pdf", 0) == 1 else "❌",
+            "arquivo_xlsx": "❌" if registro.get("arquivo_excel", 0) == 1 else "✅",
+            "arquivo_png": "❌" if registro.get("arquivo_png", 0) == 1 else "✅",
+            "arquivo_pdf": "❌" if registro.get("arquivo_pdf", 0) == 1 else "✅",
         })
 
     return display_logs
